@@ -1,5 +1,7 @@
 using System.Text;
 using LastDungeon.Api.Data;
+using LastDungeon.Api.Endpoints;
+using LastDungeon.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -7,12 +9,17 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add DbContext
+// 1. Configurar DbContext con SQL Server
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Add JWT Authentication
+// 2. Registrar Servicios de la aplicación
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// 3. Configurar Autenticación JWT Bearer
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "LastDungeonSecretKeyForJwtAuthenticationDefault2026";
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "LastDungeonApi";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "LastDungeonClient";
@@ -41,7 +48,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Add Swagger / OpenAPI with JWT Bearer support
+// 4. Configurar Swagger / OpenAPI con soporte para JWT Bearer
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -49,7 +56,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "LastDungeon API",
         Version = "v1",
-        Description = "API Backend para el juego LastDungeon"
+        Description = "API Backend para el juego roguelike LastDungeon"
     });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -59,7 +66,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingresa el token JWT en el formato: Bearer {tu token}"
+        Description = "Introduce el token JWT en este formato: Bearer {tu token}"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -80,11 +87,14 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 5. Configuración del Pipeline HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "LastDungeon API v1");
+    });
 }
 
 app.UseHttpsRedirection();
@@ -92,9 +102,19 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Base health check endpoint
-app.MapGet("/", () => Results.Ok(new { status = "Online", app = "LastDungeon API", version = "v1" }))
-   .WithName("RootHealthCheck")
-   .WithOpenApi();
+// 6. Mapear Endpoints
+app.MapAuthEndpoints();
+
+// Root Health Check
+app.MapGet("/", () => Results.Ok(new
+{
+    status = "Online",
+    app = "LastDungeon API",
+    version = "v1",
+    timestamp = DateTime.UtcNow
+}))
+.WithName("RootHealthCheck")
+.WithTags("General")
+.WithOpenApi();
 
 app.Run();
