@@ -1,0 +1,6 @@
+@LastDungeon.Api_HostAddress = http://localhost:5277
+
+GET {{LastDungeon.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
