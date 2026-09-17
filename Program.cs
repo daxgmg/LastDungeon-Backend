@@ -18,6 +18,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRunService, RunService>();
+builder.Services.AddScoped<IMejoraService, MejoraService>();
+builder.Services.AddScoped<ICofreService, CofreService>();
+builder.Services.AddScoped<IRankingService, RankingService>();
 
 // 3. Configurar Autenticación JWT Bearer
 var jwtKey = builder.Configuration["Jwt:Key"] ?? "LastDungeonSecretKeyForJwtAuthenticationDefault2026";
@@ -104,6 +108,10 @@ app.UseAuthorization();
 
 // 6. Mapear Endpoints
 app.MapAuthEndpoints();
+app.MapRunEndpoints();
+app.MapMejoraEndpoints();
+app.MapCofreEndpoints();
+app.MapRankingEndpoints();
 
 // Root Health Check
 app.MapGet("/", () => Results.Ok(new
