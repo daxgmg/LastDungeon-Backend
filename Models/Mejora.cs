@@ -27,6 +27,12 @@ public class Mejora
     [Column("tipo_efecto")]
     public string TipoEfecto { get; set; } = string.Empty;
 
+    [Column("valor_efecto")]
+    public int ValorEfecto { get; set; }
+
+    [Column("orden")]
+    public int Orden { get; set; }
+
     // Relaciones
     public ICollection<JugadorMejora> JugadorMejoras { get; set; } = new List<JugadorMejora>();
 }

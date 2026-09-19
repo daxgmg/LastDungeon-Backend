@@ -12,6 +12,8 @@ public static class MejoraMappings
             mejora.Descripcion,
             mejora.Costo,
             mejora.TipoEfecto,
+            mejora.ValorEfecto,
+            mejora.Orden,
             yaComprada
         );
 }

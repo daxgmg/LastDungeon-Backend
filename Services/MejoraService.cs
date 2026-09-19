@@ -27,7 +27,11 @@ public class MejoraService : IMejoraService
             .ToListAsync();
         var compradas = compradasLista.ToHashSet();
 
-        var mejoras = await _context.Mejoras.AsNoTracking().ToListAsync();
+        var mejoras = await _context.Mejoras
+            .AsNoTracking()
+            .OrderBy(m => m.TipoEfecto)
+            .ThenBy(m => m.Orden)
+            .ToListAsync();
 
         var respuesta = mejoras.Select(m => m.ToResponse(compradas.Contains(m.Id)));
 
@@ -49,7 +53,7 @@ public class MejoraService : IMejoraService
             return ServiceResult<MejoraResponse>.Falla("Mejora no encontrada.", 404);
         }
 
-        // Verificar que no la tenga ya comprada
+        // 1. Verificar que no la tenga ya comprada
         var yaComprada = await _context.JugadorMejoras
             .AnyAsync(jm => jm.JugadorId == jugadorId && jm.MejoraId == request.MejoraId);
 
@@ -58,7 +62,21 @@ public class MejoraService : IMejoraService
             return ServiceResult<MejoraResponse>.Falla("Ya tienes esta mejora comprada.", 409);
         }
 
-        // Verificar saldo suficiente
+        // 2. Si la mejora tiene orden > 1, validar que tenga comprada la mejora anterior de la misma categoría
+        if (mejora.Orden > 1)
+        {
+            var tieneAnterior = await _context.JugadorMejoras
+                .AnyAsync(jm => jm.JugadorId == jugadorId 
+                             && jm.Mejora.TipoEfecto == mejora.TipoEfecto 
+                             && jm.Mejora.Orden == mejora.Orden - 1);
+
+            if (!tieneAnterior)
+            {
+                return ServiceResult<MejoraResponse>.Falla("Debes comprar antes la mejora anterior de esta categoría.", 400);
+            }
+        }
+
+        // 3. Verificar saldo suficiente
         if (jugador.Monedas < mejora.Costo)
         {
             return ServiceResult<MejoraResponse>.Falla(
