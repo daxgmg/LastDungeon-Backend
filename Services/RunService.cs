@@ -123,11 +123,11 @@ public class RunService : IRunService
     public async Task<ServiceResult<RunResponse>> FinalizarRunAsync(
         int runId, int jugadorId, FinalizarRunRequest request)
     {
-        var estadosValidos = new[] { "completada", "abandonada" };
+        var estadosValidos = new[] { "finalizada", "muerto" };
         if (!estadosValidos.Contains(request.Estado))
         {
             return ServiceResult<RunResponse>.Falla(
-                "El estado debe ser 'completada' o 'abandonada'.", 422);
+                "El estado debe ser 'finalizada' o 'muerto'.", 422);
         }
 
         var run = await _context.Runs.FindAsync(runId);
@@ -159,8 +159,11 @@ public class RunService : IRunService
         run.PisoAlcanzado = request.PisoAlcanzado > 0 ? request.PisoAlcanzado : run.PisoAlcanzado;
         run.FechaFin = DateTime.UtcNow;
 
-        // Transferir monedas acumuladas de la run al total permanente del jugador
-        jugador.Monedas += run.MonedasObtenidas;
+        // Transferir monedas acumuladas de la run al total permanente del jugador solo si la run fue finalizada con éxito
+        if (request.Estado == "finalizada")
+        {
+            jugador.Monedas += run.MonedasObtenidas;
+        }
 
         // Actualizar mejor piso si corresponde
         if (run.PisoAlcanzado > jugador.MejorPiso)
@@ -172,7 +175,7 @@ public class RunService : IRunService
 
         _logger.LogInformation(
             "Run {RunId} finalizada con estado '{Estado}'. Jugador {JugadorId}: +{Monedas} monedas, mejor piso {MejorPiso}.",
-            run.Id, run.Estado, jugadorId, run.MonedasObtenidas, jugador.MejorPiso);
+            run.Id, run.Estado, jugadorId, request.Estado == "finalizada" ? run.MonedasObtenidas : 0, jugador.MejorPiso);
 
         return ServiceResult<RunResponse>.Ok(run.ToResponse(), "Run finalizada correctamente.");
     }
