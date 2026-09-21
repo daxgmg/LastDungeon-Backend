@@ -7,5 +7,6 @@ public record JugadorResponse(
     bool Verificado,
     int Monedas,
     int MejorPiso,
-    DateTime FechaRegistro
+    DateTime FechaRegistro,
+    bool TieneBotas
 );
