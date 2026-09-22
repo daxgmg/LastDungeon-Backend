@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<Mejora> Mejoras => Set<Mejora>();
     public DbSet<JugadorMejora> JugadorMejoras => Set<JugadorMejora>();
     public DbSet<Cofre> Cofres => Set<Cofre>();
+    public DbSet<CofreAbierto> CofresAbiertos => Set<CofreAbierto>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -86,6 +87,20 @@ public class AppDbContext : DbContext
                 .HasForeignKey(e => e.RunId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("fk_cofre_run");
+        });
+
+        // CofreAbierto configuration
+        modelBuilder.Entity<CofreAbierto>(entity =>
+        {
+            entity.HasIndex(e => new { e.JugadorId, e.CofreClave })
+                .IsUnique()
+                .HasDatabaseName("uq_cofre_abierto");
+
+            entity.HasOne(e => e.Jugador)
+                .WithMany()
+                .HasForeignKey(e => e.JugadorId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_cofreabierto_jugador");
         });
     }
 }

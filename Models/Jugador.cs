@@ -32,6 +32,12 @@ public class Jugador
     [Column("fecha_registro")]
     public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
 
+    [Column("tiene_botas")]
+    public bool TieneBotas { get; set; } = false;
+
+    [Column("botas_equipadas")]
+    public bool BotasEquipadas { get; set; } = false;
+
     // Relaciones
     public ICollection<CodigoVerificacion> CodigosVerificacion { get; set; } = new List<CodigoVerificacion>();
     public ICollection<Run> Runs { get; set; } = new List<Run>();

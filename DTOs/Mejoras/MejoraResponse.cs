@@ -6,5 +6,7 @@ public record MejoraResponse(
     string? Descripcion,
     int Costo,
     string TipoEfecto,
+    int ValorEfecto,
+    int Orden,
     bool YaComprada
 );

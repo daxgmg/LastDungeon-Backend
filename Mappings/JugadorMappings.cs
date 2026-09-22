@@ -14,7 +14,9 @@ public static class JugadorMappings
             jugador.Verificado,
             jugador.Monedas,
             jugador.MejorPiso,
-            jugador.FechaRegistro
+            jugador.FechaRegistro,
+            jugador.TieneBotas,
+            jugador.BotasEquipadas
         );
     }
 }
