@@ -113,6 +113,7 @@ app.MapMejoraEndpoints();
 app.MapCofreEndpoints();
 app.MapRankingEndpoints();
 app.MapJugadorEndpoints();
+app.MapCofrePermanenteEndpoints();
 
 // Root Health Check
 app.MapGet("/", () => Results.Ok(new
