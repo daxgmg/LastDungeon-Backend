@@ -8,5 +8,6 @@ public record JugadorResponse(
     int Monedas,
     int MejorPiso,
     DateTime FechaRegistro,
-    bool TieneBotas
+    bool TieneBotas,
+    bool BotasEquipadas
 );

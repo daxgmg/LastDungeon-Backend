@@ -15,7 +15,8 @@ public static class JugadorMappings
             jugador.Monedas,
             jugador.MejorPiso,
             jugador.FechaRegistro,
-            jugador.TieneBotas
+            jugador.TieneBotas,
+            jugador.BotasEquipadas
         );
     }
 }

@@ -47,12 +47,40 @@ public static class JugadorEndpoints
                 return Results.NotFound(new { mensaje = "Jugador no encontrado." });
 
             jugador.TieneBotas = true;
+            jugador.BotasEquipadas = true;
             await db.SaveChangesAsync();
 
             return Results.Ok(jugador.ToResponse());
         })
         .WithName("DesbloquearBotas")
         .WithSummary("Desbloquear las Botas del Doble Salto para el jugador autenticado")
+        .WithTags("Jugadores")
+        .RequireAuthorization()
+        .WithOpenApi();
+
+        app.MapPatch("/api/jugadores/{id:int}/equipo-botas", async (
+            int id,
+            EquipoBotasRequest body,
+            ClaimsPrincipal user,
+            AppDbContext db) =>
+        {
+            var jugadorId = ObtenerJugadorId(user);
+            if (jugadorId == null) return Results.Unauthorized();
+
+            if (jugadorId.Value != id)
+                return Results.Json(new { mensaje = "No puedes modificar el equipo de otro jugador." }, statusCode: 403);
+
+            var jugador = await db.Jugadores.FindAsync(id);
+            if (jugador is null)
+                return Results.NotFound(new { mensaje = "Jugador no encontrado." });
+
+            jugador.BotasEquipadas = body.Equipadas;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(jugador.ToResponse());
+        })
+        .WithName("EquiparBotas")
+        .WithSummary("Equipar o desequipar las Botas del Doble Salto")
         .WithTags("Jugadores")
         .RequireAuthorization()
         .WithOpenApi();
