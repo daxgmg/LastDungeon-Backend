@@ -154,28 +154,32 @@ public class RunService : IRunService
             return ServiceResult<RunResponse>.Falla("Jugador no encontrado.", 404);
         }
 
-        // Actualizar estado y piso alcanzado de la run
+        // Usar el total de monedas reportado por el cliente como valor definitivo de la run
+        run.MonedasObtenidas = request.MonedasObtenidas;
+
+        // Actualizar estado, piso y fecha de fin
         run.Estado = request.Estado;
-        run.PisoAlcanzado = request.PisoAlcanzado > 0 ? request.PisoAlcanzado : run.PisoAlcanzado;
+        run.PisoAlcanzado = request.PisoAlcanzado;
         run.FechaFin = DateTime.UtcNow;
 
-        // Transferir monedas acumuladas de la run al total permanente del jugador solo si la run fue finalizada con éxito
+        // Solo si la run fue completada con éxito, transferir monedas al saldo permanente del jugador
+        // Si el jugador murió, las monedas se pierden (pero quedan en historial de la run)
         if (request.Estado == "finalizada")
         {
-            jugador.Monedas += run.MonedasObtenidas;
+            jugador.Monedas += request.MonedasObtenidas;
         }
 
-        // Actualizar mejor piso si corresponde
-        if (run.PisoAlcanzado > jugador.MejorPiso)
+        // Actualizar mejor piso si corresponde (tanto en muerte como en finalización exitosa)
+        if (request.PisoAlcanzado > jugador.MejorPiso)
         {
-            jugador.MejorPiso = run.PisoAlcanzado;
+            jugador.MejorPiso = request.PisoAlcanzado;
         }
 
         await _context.SaveChangesAsync();
 
         _logger.LogInformation(
             "Run {RunId} finalizada con estado '{Estado}'. Jugador {JugadorId}: +{Monedas} monedas, mejor piso {MejorPiso}.",
-            run.Id, run.Estado, jugadorId, request.Estado == "finalizada" ? run.MonedasObtenidas : 0, jugador.MejorPiso);
+            run.Id, run.Estado, jugadorId, request.Estado == "finalizada" ? request.MonedasObtenidas : 0, jugador.MejorPiso);
 
         return ServiceResult<RunResponse>.Ok(run.ToResponse(), "Run finalizada correctamente.");
     }
